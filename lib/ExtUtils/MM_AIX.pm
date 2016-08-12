@@ -35,11 +35,15 @@ sub dlsyms {
     my($self,%attribs) = @_;
     return '' unless $self->needs_linking;
     my @m;
-    # these will need XSMULTI-fying but maybe that already happens
-    push @m,"\ndynamic :: $self->{BASEEXT}.exp\n\n"
+    my $deps = $self->{XSMULTI}
+      ? join ' ', map { $_ . $self->xs_dlsyms_ext } $self->_xs_list_basenames
+      : "$self->{BASEEXT}.exp";
+
+    push @m,"\ndynamic :: $deps\n\n"
       unless $self->{SKIPHASH}{'dynamic'}; # dynamic and static are subs, so...
-    push @m,"\nstatic :: $self->{BASEEXT}.exp\n\n"
+    push @m,"\nstatic :: $deps\n\n"
       unless $self->{SKIPHASH}{'static'};  # we avoid a warning if we tick them
+
     join "\n", @m, $self->xs_dlsyms_iterator(\%attribs);
 }
 
